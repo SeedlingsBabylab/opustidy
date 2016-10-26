@@ -21,6 +21,7 @@ def find_final(cha_files):
     final = []
     newclan_merged_final = []
     newclan_merged = []
+
     for file in cha_files:
         if file.endswith("_final.cha") and not file.endswith("newclan_merged_final.cha"):
             final.append(file)
@@ -28,16 +29,37 @@ def find_final(cha_files):
             newclan_merged_final.append(file)
         elif file.endswith("newclan_merged.cha"):
             newclan_merged.append(file)
-
     return final, newclan_merged_final, newclan_merged
+
+def find_final_final(final, nc_merged_final, nc_merged):
+    final_final = None
+    if len(final) > 1:
+        print "more than one final.cha in this Annotation folder: {}".format(final[0][:5])
+    elif len(final) == 1:
+        final_final = final[0]
+    elif len(final) == 0:
+        if len(nc_merged_final) > 1:
+            print "more than one newclan_merged_final.cha in this Annotation folder: {}".format(nc_merged_final[0][:5])
+        elif len(nc_merged_final) == 1:
+            final_final = nc_merged_final[0]
+        elif len(nc_merged_final) == 0:
+            if len(nc_merged) > 1:
+                print "more than one newclan_merged.cha in this Annotation folder: {}".format(nc_merged[0][:5])
+            elif len(nc_merged) == 1:
+                final_final = nc_merged[0]
+            elif len(nc_merged) == 0:
+                return final_final
+    return final_final
 
 def walk_opus_dry(start):
     for root, dirs, files in os.walk(start):
         if "Audio_Annotation" in root:
             cha, cex, other = filter_files_by_type(root, files)
             final, nc_merged_final, nc_merged = find_final(cha)
-            if len(final) > 1:
-                print "more than one final.cha in this Annotation folder: {}".format(final[0][:5])
+            final_final = find_final_final(final, nc_merged_final, nc_merged)
+            if not final_final:
+                print "No final file in folder: {}".format(root)
+
 
         elif "Video_Annotation" in root:
             print
@@ -47,6 +69,9 @@ def walk_opus(start):
         if "Audio_Annotation" in root:
             cha, cex, other = filter_files_by_type(root, files)
             final, nc_merged_final, nc_merged = find_final(cha)
+            final_final = find_final_final(final, nc_merged_final, nc_merged)
+            if not final_final:
+                print "No final file in folder: {}".format(root)
 
         elif "Video_Annotation" in root:
             print
