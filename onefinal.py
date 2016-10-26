@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 
 
 def filter_files_by_type(root, files):
@@ -17,7 +18,7 @@ def filter_files_by_type(root, files):
     return cha_paths, cex_paths, other_paths
 
 
-def find_final(cha_files):
+def find_finals(cha_files):
     final = []
     newclan_merged_final = []
     newclan_merged = []
@@ -37,41 +38,62 @@ def find_final_final(final, nc_merged_final, nc_merged):
         print "more than one final.cha in this Annotation folder: {}".format(final[0][:5])
     elif len(final) == 1:
         final_final = final[0]
+        return final_final
     elif len(final) == 0:
         if len(nc_merged_final) > 1:
             print "more than one newclan_merged_final.cha in this Annotation folder: {}".format(nc_merged_final[0][:5])
         elif len(nc_merged_final) == 1:
             final_final = nc_merged_final[0]
+            return final_final
         elif len(nc_merged_final) == 0:
             if len(nc_merged) > 1:
                 print "more than one newclan_merged.cha in this Annotation folder: {}".format(nc_merged[0][:5])
             elif len(nc_merged) == 1:
                 final_final = nc_merged[0]
+                return final_final
             elif len(nc_merged) == 0:
                 return final_final
     return final_final
 
+def remove_final_from_list(final, chas):
+    del chas[chas.index(final)]
+
 def walk_opus_dry(start):
     for root, dirs, files in os.walk(start):
-        if "Audio_Annotation" in root:
-            cha, cex, other = filter_files_by_type(root, files)
-            final, nc_merged_final, nc_merged = find_final(cha)
+        if "Audio_Annotation" in root and "old_chas" not in root:
+            print "\n\ninside {}".format(root)
+            chas, cex, other = filter_files_by_type(root, files)
+            final, nc_merged_final, nc_merged = find_finals(chas)
             final_final = find_final_final(final, nc_merged_final, nc_merged)
             if not final_final:
                 print "No final file in folder: {}".format(root)
-
+            else:
+                old_chas_dir = os.path.join(root, "old_chas")
+                if not os.path.exists(old_chas_dir):
+                    os.mkdir(old_chas_dir)
+                del chas[chas.index(final_final)]
+                for file in chas:
+                    print "moving {} to old_chas directory".format(os.path.basename(file))
+                    #shutil.move(file, os.path.join(old_chas_dir, os.path.basename(file)))
 
         elif "Video_Annotation" in root:
             print
 
 def walk_opus(start):
     for root, dirs, files in os.walk(start):
-        if "Audio_Annotation" in root:
-            cha, cex, other = filter_files_by_type(root, files)
-            final, nc_merged_final, nc_merged = find_final(cha)
+        if "Audio_Annotation" in root and "olds_chas" not in root:
+            chas, cex, other = filter_files_by_type(root, files)
+            final, nc_merged_final, nc_merged = find_finals(chas)
             final_final = find_final_final(final, nc_merged_final, nc_merged)
             if not final_final:
                 print "No final file in folder: {}".format(root)
+            else:
+                old_chas_dir = os.path.join(root, "old_chas")
+                if not os.path.exists(old_chas_dir):
+                    os.mkdir(old_chas_dir)
+                del chas[chas.index(final_final)]
+                for file in chas:
+                    shutil.move(file, os.path.join(old_chas_dir, os.path.basename(file)))
 
         elif "Video_Annotation" in root:
             print
